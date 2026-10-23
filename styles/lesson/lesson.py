@@ -10,7 +10,8 @@
 plan.json: source, transcript, keep или keep_file, face_crop [x, y, сторона] – квадрат лица для окна,
 full_crop [x, y, w, h] – кадр 16:9 для сцен face, fix, out, scenes.
 Сцена: from (секунды ролика или слово, "слово#2" – второе вхождение), kind, whoosh (true – звук на смене блока).
-kind: face | img | imgs | list | compare | big | chain | word. Поля – STYLE.md, раздел 4.
+kind: face | slide | img | imgs | list | compare | big | chain | word. Поля – STYLE.md, раздел 4.
+view [x, y, w, h] в долях 0–1 – показать крупно часть картинки src (кусок слайда, о котором речь).
 Картинки (src, srcs, side) – пути от папки плана."""
 import json
 import os
@@ -107,7 +108,13 @@ def frames(root, plan, only=None):
         for i, s in enumerate(plan["scenes"]):
             if s["kind"] == "face" or (only is not None and i not in only):
                 continue
-            spec = {k: v for k, v in s.items() if k not in ("from", "to", "whoosh")}
+            spec = {k: v for k, v in s.items() if k not in ("from", "to", "whoosh") and not k.startswith("_")}
+            if "view" in spec and "src" in spec:   # крупно часть картинки: view [x, y, w, h] в долях 0–1
+                im = Image.open(root / spec["src"])
+                x, y, w, h = spec.pop("view")
+                vp = out / f"{i:02d}_view.png"
+                im.crop((round(x * im.width), round(y * im.height), round((x + w) * im.width), round((y + h) * im.height))).save(vp)
+                spec["src"] = vp
             for k in ("src", "side"):
                 if k in spec:
                     spec[k] = uri(root, spec[k])
@@ -255,6 +262,13 @@ def main():
     for k in ("face_crop", "full_crop"):
         if k not in plan:
             sys.exit(f"В plan.json нет {k}: подобрать по tools/frames.py --grid (STYLE.md, раздел 3)")
+    if (root / "slides.json").exists() and "--frames" not in sys.argv and "--sheet" not in sys.argv:
+        # урок по презентации: решение по каждому слайду обязательно (STYLE.md, раздел 8)
+        n = len(json.load(open(root / "slides.json", encoding="utf-8"))["slides"])
+        dec = (root / "slides_decisions.md").read_text(encoding="utf-8").lower() if (root / "slides_decisions.md").exists() else ""
+        miss = [k for k in range(1, n + 1) if not re.search(rf"слайд {k}\b", dec)]
+        if miss:
+            sys.exit(f"Нет решения в slides_decisions.md по слайдам: {', '.join(map(str, miss))} (STYLE.md, раздел 8)")
     if "--frames" in sys.argv:
         check(root, plan, [float(x) for x in sys.argv[sys.argv.index("--frames") + 1].split(",")])
     elif "--sheet" in sys.argv:

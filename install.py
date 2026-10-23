@@ -33,7 +33,7 @@ if __name__ == "__main__":
     if not PY.exists():
         run(sys.executable, "-m", "venv", VENV)
     run(PY, "-m", "pip", "install", "-q", "--upgrade", "pip")
-    run(PY, "-m", "pip", "install", "-q", "patchright", "requests", "python-dotenv", "yt-dlp", "pillow", "numpy")
+    run(PY, "-m", "pip", "install", "-q", "patchright", "requests", "python-dotenv", "yt-dlp", "pillow", "numpy", "pymupdf")
     # расшифровка на компьютере без ключа: на части версий Python может не встать – тогда нужен ключ Groq или ElevenLabs
     whisper = run(PY, "-m", "pip", "install", "-q", "faster-whisper", must=False)
     if not (ROOT / ".env").exists():

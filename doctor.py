@@ -20,7 +20,7 @@ def main():
     check("Окружение .venv", (ROOT / ".venv").exists(), "python3 install.py")
     for tool in ("ffmpeg", "ffprobe"):
         check(tool, bool(shutil.which(tool)), "Mac: brew install ffmpeg · Windows: winget install Gyan.FFmpeg")
-    for mod in ("patchright", "requests", "dotenv", "PIL", "numpy", "yt_dlp"):
+    for mod in ("patchright", "requests", "dotenv", "PIL", "numpy", "yt_dlp", "pymupdf"):
         try:
             __import__(mod)
             check(f"пакет {mod}", True)
