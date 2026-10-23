@@ -79,13 +79,24 @@ def main():
         W, H = pr["width"], pr["height"]
         ch = round(W / CARD_RATIO)
         hh = round(W / HERO_RATIO)
-        save(p, "plan.json", {
-            "title": p.name, "style": a.style, "source": "source.mp4", "transcript": "transcript_src.json",
-            "keep_file": "keep.json",
-            "card_crop": [0, max(0, round(H * 0.28)), W, ch],
-            "hero_crop": [0, max(0, round(H * 0.30)), W, hh],
-            "_crop_note": "ЗАГОТОВКА. Подобрать по frames.py --grid и проверить frames.py --crop: лицо крупно, глаза на 35–40% высоты кропа",
-            "fix": {}, "out": "final.mp4", "jobs": 6, "scenes": []})
+        if a.style == "lesson":   # горизонтальный урок: квадрат лица для окна и кадр 16:9 для сцен face
+            side = min(W, H) // 2
+            fh = min(H, round(W * 9 / 16))
+            save(p, "plan.json", {
+                "title": p.name, "style": "lesson", "source": "source.mp4", "transcript": "transcript_src.json",
+                "keep_file": "keep.json",
+                "face_crop": [(W - side) // 2, max(0, round(H * 0.25) - side // 4), side],
+                "full_crop": [0, 0 if fh == H else round(H * 0.25), W, fh],
+                "_crop_note": "ЗАГОТОВКА. Подобрать по frames.py --grid и проверить lesson.py --frames (STYLE.md, раздел 3)",
+                "fix": {}, "out": "final.mp4", "scenes": []})
+        else:
+            save(p, "plan.json", {
+                "title": p.name, "style": a.style, "source": "source.mp4", "transcript": "transcript_src.json",
+                "keep_file": "keep.json",
+                "card_crop": [0, max(0, round(H * 0.28)), W, ch],
+                "hero_crop": [0, max(0, round(H * 0.30)), W, hh],
+                "_crop_note": "ЗАГОТОВКА. Подобрать по frames.py --grid и проверить frames.py --crop: лицо крупно, глаза на 35–40% высоты кропа",
+                "fix": {}, "out": "final.mp4", "jobs": 6, "scenes": []})
     print(f"Готово: {p / 'phrases.md'}, {p / 'plan.json'}. Длина ролика {fmt(off)}.")
     print(f"Правила стиля: {ROOT / 'styles' / a.style / 'STYLE.md'}")
 

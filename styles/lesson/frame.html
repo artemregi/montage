@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<title>Кадр урока</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;600;700&family=Caveat:wght@700&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#0E0B09; --panel:#17130F; --line:#2A241E; --text:#F2EEE9; --muted:#8C8379; --accent:#FF7A1F; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { width:1920px; height:1080px; background:var(--bg); color:var(--text); font-family:Inter, sans-serif; overflow:hidden; position:relative; }
+/* справа внизу место под лицо (окно 420×420 в 56px от краёв) — его вставляет ffmpeg */
+.face-slot { position:absolute; right:56px; bottom:56px; width:420px; height:420px; border-radius:36px; background:#000; }
+.kicker { position:absolute; left:80px; top:64px; font:600 26px Inter; color:var(--accent); letter-spacing:.08em; text-transform:uppercase; }
+h1 { position:absolute; left:80px; top:104px; width:1700px; font:700 72px/1.05 Oswald; text-transform:uppercase; letter-spacing:.01em; }
+h1 em { font-style:normal; color:var(--accent); }
+/* картинка: слева от лица, под заголовком */
+.img { position:absolute; left:80px; top:220px; width:1300px; height:800px; display:flex; align-items:center; justify-content:center; }
+.img img { max-width:100%; max-height:100%; border-radius:24px; border:3px solid var(--line); }
+.img.notitle { top:56px; height:968px; }
+.img.multi { gap:22px; }
+.img.multi img { max-width:calc((100% - 66px) / 4); }
+.cap { position:absolute; left:80px; bottom:28px; font:400 24px Inter; color:var(--muted); }
+/* текстовые блоки */
+.body { position:absolute; left:80px; top:250px; width:1300px; }
+.list { display:flex; flex-direction:column; gap:22px; }
+.list div { display:flex; gap:28px; align-items:baseline; font:600 46px/1.25 Inter; padding:18px 0; border-bottom:2px solid var(--line); color:var(--muted); }
+.list div.on, .list.all div { color:var(--text); }
+.list span { font:700 46px Oswald; color:var(--accent); width:70px; flex:none; }
+.list div.on span { color:var(--accent); }
+.compare { display:flex; gap:32px; }
+.compare > div { flex:1; border-radius:32px; padding:44px 48px; background:var(--panel); border:2px solid var(--line); }
+.compare > div.r { background:var(--accent); color:#0E0B09; border-color:var(--accent); }
+.compare h3 { font:700 40px Oswald; text-transform:uppercase; margin-bottom:24px; }
+.compare p { font:600 40px/1.3 Inter; margin:10px 0; }
+.big { font:700 230px/1 Oswald; color:var(--accent); }
+.big small { font-size:90px; color:var(--text); }
+.under { font:600 48px/1.3 Inter; margin-top:26px; max-width:1250px; }
+.under b { color:var(--accent); }
+.chain { display:flex; flex-wrap:wrap; align-items:center; gap:22px; }
+.chain div { font:700 52px Oswald; text-transform:uppercase; padding:26px 38px; border-radius:26px; background:var(--panel); border:2px solid var(--line); }
+.chain div.on { background:var(--accent); color:#0E0B09; border-color:var(--accent); }
+.chain i { font:700 52px Inter; color:var(--accent); font-style:normal; }
+.note { position:absolute; font:700 52px Caveat; color:var(--accent); transform:rotate(-4deg); }
+.word { font:700 150px/1 Oswald; text-transform:uppercase; color:var(--accent); border:6px solid var(--accent); border-radius:30px; display:inline-block; padding:20px 50px; margin-top:20px; }
+/* картинка сбоку от текста: текст слева 700px, картинка 580×800 между текстом и лицом */
+.has-side .body { width:700px; }
+.has-side h1 { width:1300px; }
+.has-side .list div, .has-side .compare p, .has-side .under { font-size:36px; }
+.has-side .compare { flex-direction:column; gap:20px; }
+.has-side .compare > div { padding:28px 34px; }
+.has-side .big { font-size:150px; }
+.has-side .chain div { font-size:38px; padding:18px 26px; }
+.side { position:absolute; left:820px; top:220px; width:580px; height:800px; display:flex; align-items:center; justify-content:center; }
+.side img { max-width:100%; max-height:100%; border-radius:22px; border:3px solid var(--line); }
+</style></head>
+<body>
+<div class="face-slot"></div>
+<div id="root"></div>
+<script>
+// спецификация кадра — JSON в location.hash: {kicker, title, kind, ...}
+const s = JSON.parse(decodeURIComponent(location.hash.slice(1)));
+const md = t => (t || "").replace(/\*\*(.+?)\*\*/g, "<em>$1</em>");
+const bmd = t => (t || "").replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+let h = "";
+if (s.kicker) h += `<div class="kicker">${s.kicker}</div>`;
+if (s.title) h += `<h1>${md(s.title)}</h1>`;
+const k = s.kind;
+if (k === "img") h += `<div class="img ${s.title ? "" : "notitle"}"><img src="${s.src}"></div>`;
+if (k === "imgs") h += `<div class="img multi">${s.srcs.map(x => `<img src="${x}">`).join("")}</div>`;
+if (k === "list") h += `<div class="body"><div class="list ${s.on ? "" : "all"}">${s.items.map((x, i) =>
+  `<div class="${s.on === i + 1 ? "on" : ""}"><span>${String(i + 1).padStart(2, "0")}</span>${bmd(x)}</div>`).join("")}</div></div>`;
+if (k === "compare") h += `<div class="body"><div class="compare">${[s.left, s.right].map((c, i) =>
+  `<div class="${i ? "r" : ""}"><h3>${c.title}</h3>${c.items.map(x => `<p>${x}</p>`).join("")}</div>`).join("")}</div></div>`;
+if (k === "big") h += `<div class="body"><div class="big">${s.value}</div><div class="under">${bmd(s.text)}</div></div>`;
+if (k === "chain") h += `<div class="body"><div class="chain">${s.items.map((x, i) =>
+  (i ? "<i>→</i>" : "") + `<div class="${(s.on || []).includes(i + 1) ? "on" : ""}">${x}</div>`).join("")}</div>` +
+  (s.text ? `<div class="under">${bmd(s.text)}</div>` : "") + `</div>`;
+if (k === "word") h += `<div class="body"><div class="under">${bmd(s.text)}</div><div class="word">${s.word}</div></div>`;
+if (s.side) { document.body.classList.add("has-side"); h += `<div class="side"><img src="${s.side}"></div>`; }
+if (s.cap) h += `<div class="cap">${s.cap}</div>`;
+document.getElementById("root").innerHTML = h;
+</script>
+</body></html>
